@@ -1,5 +1,6 @@
 import sqlite3
 import datetime
+import sys
 
 
 class DatabaseManager:
@@ -92,5 +93,16 @@ class ListBookmarkCommand:
         return db.select('bookmarks', order_by=self.order_by).fetchall()
 
 
+class DeleteBookmarkCommand:
+    def execute(self, data):
+        db.delete('bookmarks', {'id': data})
+        return 'Bookmark deleted'
+
+
+class QuitCommand:
+    def execute(self):
+        sys.exit()
+
+
 if __name__ == '__main__':
-    pass
+    CreateBookmarkTableCommand().execute()
