@@ -14,7 +14,6 @@ class DatabaseManager:
             cursor.execute(statement, values or [])
             return cursor
 
-    # FIXME: SQL queries
     def create_table(self, table_name: str, columns: dict):
         columns_with_types = [
             f'{column_name} {data_type}'

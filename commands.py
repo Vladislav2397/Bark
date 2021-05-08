@@ -1,6 +1,8 @@
 import datetime
 import sys
 
+import requests
+
 from peewee_database import PeeweeDatabaseManager, Bookmarks
 
 
@@ -13,8 +15,8 @@ class CreateBookmarkTableCommand:
 
 
 class AddBookmarkCommand:
-    def execute(self, data: dict):
-        data['date_added'] = datetime.datetime.utcnow().isoformat()
+    def execute(self, data: dict, timestamp=None):
+        data['date_added'] = timestamp or datetime.datetime.utcnow().isoformat()
         db.add(data)
         return 'Закладка добавлена'
 
@@ -31,6 +33,51 @@ class DeleteBookmarkCommand:
     def execute(self, data):
         db.delete({'id': data})
         return 'Bookmark deleted'
+
+
+class ImportGithubStarsCommand:
+    def _extract_bookmark_info(self, repo: dict):
+        return {
+            'title': repo['name'],
+            'url': repo['html_url'],
+            'notes': repo['description'],
+        }
+
+    def execute(self, data: dict):
+        bookmarks_imported = 0
+
+        github_username = data['github_username']
+        next_page_of_results = \
+            f'https://api.github.com/users/{github_username}/starred'
+        while next_page_of_results:
+            stars_response = requests.get(
+                next_page_of_results,
+                headers={
+                    'Accept': 'application/vnd.github.v3.star+json'
+                },
+            )
+            next_page_of_results = stars_response.links.get(
+                'next', {}
+            ).get('url')
+
+            for repo_info in stars_response.json():
+                repo = repo_info['repo']
+
+                if data['preserve_timestamps']:
+                    timestamp = datetime.datetime.strptime(
+                        repo_info['starred_at'],
+                        '%Y-%m-%dT%H:%M:%SZ'
+                    )
+                else:
+                    timestamp = None
+
+                bookmarks_imported += 1
+
+                AddBookmarkCommand().execute(
+                    self._extract_bookmark_info(repo),
+                    timestamp=timestamp
+                )
+        return f'Импортировано {bookmarks_imported} закладок'
 
 
 class QuitCommand:

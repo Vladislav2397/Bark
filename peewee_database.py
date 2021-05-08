@@ -1,5 +1,5 @@
 from peewee import (
-    SqliteDatabase, Model, CharField, TextField, DateTimeField
+    SqliteDatabase, Model, CharField, TextField
 )
 
 db = SqliteDatabase('bookmarks.db')

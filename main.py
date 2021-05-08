@@ -3,6 +3,7 @@ from commands import (
     AddBookmarkCommand,
     ListBookmarkCommand,
     DeleteBookmarkCommand,
+    ImportGithubStarsCommand,
     QuitCommand
 )
 
@@ -59,13 +60,27 @@ def get_bookmark_id_for_deletion():
     return get_user_input('Enter a bookmark ID to delete')
 
 
+def get_github_import_options():
+    return {
+        'github_username': get_user_input('Пользовательское имя GitHub: '),
+        'preserve_timestamps': get_user_input(
+            'Сохранить метки времени [Д/н]',
+            required=False
+        ) in {'Д', 'д', None},
+    }
+
+
+# TODO: Add edit bookmark command
 options = {
     'A': Option(
         'Добавить закладку',
         AddBookmarkCommand(),
         prep_call=get_new_bookmark_data
     ),
-    'B': Option('Показать список закладок по дате', ListBookmarkCommand()),
+    'B': Option(
+        'Показать список закладок по дате',
+        ListBookmarkCommand()
+    ),
     'T': Option(
         'Показать список закладок по заголовку',
         ListBookmarkCommand(order_by=Bookmarks.title)
@@ -75,7 +90,15 @@ options = {
         DeleteBookmarkCommand(),
         prep_call=get_bookmark_id_for_deletion
     ),
-    'Q': Option('Выйти', QuitCommand()),
+    'G': Option(
+        'Импортировать звезды GitHub',
+        ImportGithubStarsCommand(),
+        prep_call=get_github_import_options
+    ),
+    'Q': Option(
+        'Выйти',
+        QuitCommand()
+    ),
 }
 
 
@@ -83,7 +106,10 @@ def clear_screen():
     import os
     import subprocess
 
-    subprocess.run('cls' if os.name == 'nt' else 'clear')
+    subprocess.run(
+        'cls'
+        if os.name == 'nt' else 'clear'
+    )
 
 
 def loop():
