@@ -29,7 +29,6 @@ class ListBookmarkCommand(Command):
 
     def execute(self, data=None):
         data = [item for item in db.list(order_by=self.order_by)]
-        # print('data', [item for item in data])
         return True, data
 
 
@@ -87,7 +86,7 @@ class ImportGithubStarsCommand(Command):
                     self._extract_bookmark_info(repo),
                     timestamp=timestamp
                 )
-        return f'Импортировано {bookmarks_imported} закладок'
+        return True, f'Импортировано {bookmarks_imported} закладок'
 
 
 class QuitCommand(Command):

@@ -2,6 +2,7 @@ import datetime
 
 from commands import (
     Bookmarks,
+    Command,
     AddBookmarkCommand,
     ListBookmarkCommand,
     EditBookmarkCommand,
@@ -15,7 +16,7 @@ class Option:
     def __init__(
         self,
         name: str,
-        command,
+        command: Command,
         prep_call=None,
         success_message='{result}'
     ):
