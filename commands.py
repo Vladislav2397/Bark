@@ -26,13 +26,30 @@ class ListBookmarkCommand:
         self.order_by = order_by
 
     def execute(self):
-        return [item for item in Bookmarks.select().order_by(self.order_by)]
+        return [
+            f'{item.id}: {item.title}'
+            for item in Bookmarks.select().order_by(self.order_by)
+        ]
 
 
 class DeleteBookmarkCommand:
     def execute(self, data):
         db.delete({'id': data})
         return 'Bookmark deleted'
+
+
+class EditBookmarkCommand:
+    def execute(self, data: dict):
+        bookmark: Bookmarks = Bookmarks.get_or_none(
+            Bookmarks.id == data['id']
+        )
+
+        if bookmark:
+            bookmark.title = data['title']
+            bookmark.url = data['url']
+            bookmark.notes = data['notes']
+            bookmark.save()
+            return 'Bookmark updated'
 
 
 class ImportGithubStarsCommand:

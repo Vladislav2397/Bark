@@ -2,6 +2,7 @@ from commands import (
     Bookmarks,
     AddBookmarkCommand,
     ListBookmarkCommand,
+    EditBookmarkCommand,
     DeleteBookmarkCommand,
     ImportGithubStarsCommand,
     QuitCommand
@@ -50,14 +51,26 @@ def get_user_input(label, required=True):
 
 def get_new_bookmark_data():
     return {
-        'title': get_user_input('Title'),
+        'title': get_user_input('Title', required=True),
         'url': get_user_input('URL'),
-        'notes': get_user_input('Notes', required=True)
+        'notes': get_user_input('Notes')
     }
 
 
+def get_bookmark_by_id():
+    return get_user_input('Введите id закладки: ')
+
+
 def get_bookmark_id_for_deletion():
-    return get_user_input('Enter a bookmark ID to delete')
+    return get_user_input('Enter a bookmark ID to delete: ')
+
+
+def get_bookmark_for_edit():
+    current_id = get_user_input('Введите id закладки: ')
+    current_data = get_new_bookmark_data()
+    data = {'id': int(current_id)}
+    data.update(current_data)
+    return data
 
 
 def get_github_import_options():
@@ -70,7 +83,6 @@ def get_github_import_options():
     }
 
 
-# TODO: Add edit bookmark command
 options = {
     'A': Option(
         'Добавить закладку',
@@ -95,6 +107,11 @@ options = {
         ImportGithubStarsCommand(),
         prep_call=get_github_import_options
     ),
+    'E': Option(
+        'Изменить закладку',
+        EditBookmarkCommand(),
+        prep_call=get_bookmark_for_edit
+    ),
     'Q': Option(
         'Выйти',
         QuitCommand()
@@ -104,9 +121,8 @@ options = {
 
 def clear_screen():
     import os
-    import subprocess
 
-    subprocess.run(
+    os.system(
         'cls'
         if os.name == 'nt' else 'clear'
     )
