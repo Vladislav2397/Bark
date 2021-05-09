@@ -4,28 +4,23 @@ from abc import ABC, abstractmethod
 
 import requests
 
-from peewee_database import PeeweeDatabaseManager, Bookmarks
+from persistence_layer import BookmarkDatabase, Bookmarks
 
 
-db = PeeweeDatabaseManager()
+db = BookmarkDatabase()
 
 
-class Command:
+class Command(ABC):
     @abstractmethod
     def execute(self, data):
         pass
 
 
-class CreateBookmarkTableCommand(Command):
-    def execute(self, data=None) -> None:
-        db.create_table()
-
-
 class AddBookmarkCommand(Command):
     def execute(self, data: dict, timestamp=None):
         data['date_added'] = timestamp or datetime.datetime.utcnow().isoformat()
-        db.add(data)
-        return 'Закладка добавлена'
+        db.create(data)
+        return True, None
 
 
 class ListBookmarkCommand(Command):
@@ -33,30 +28,21 @@ class ListBookmarkCommand(Command):
         self.order_by = order_by
 
     def execute(self, data=None):
-        return [
-            f'{item.id}: {item.title}'
-            for item in Bookmarks.select().order_by(self.order_by)
-        ]
+        data = [item for item in db.list(order_by=self.order_by)]
+        # print('data', [item for item in data])
+        return True, data
 
 
 class DeleteBookmarkCommand(Command):
     def execute(self, data: str):
-        db.delete({'id': data})
-        return 'Bookmark deleted'
+        db.delete(data)
+        return True, 'Bookmark deleted'
 
 
 class EditBookmarkCommand(Command):
     def execute(self, data: dict):
-        bookmark: Bookmarks = Bookmarks.get_or_none(
-            Bookmarks.id == data['id']
-        )
-
-        if bookmark:
-            bookmark.title = data['title']
-            bookmark.url = data['url']
-            bookmark.notes = data['notes']
-            bookmark.save()
-            return 'Bookmark updated'
+        db.edit(data['id'], data)
+        return True, 'Bookmark updated'
 
 
 class ImportGithubStarsCommand(Command):

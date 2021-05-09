@@ -40,7 +40,9 @@ class PeeweeDatabaseManager:
         Bookmarks.delete_by_id(criteria['id'])
 
     def select(self, criteria: dict = None, order_by=None):
-        return Bookmarks.select(criteria).order_by(order_by)
+        if criteria:
+            return Bookmarks.select(criteria).order_by(order_by)
+        return Bookmarks.select().order_by(order_by)
 
 
 with db:

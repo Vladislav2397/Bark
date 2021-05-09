@@ -1,3 +1,5 @@
+import datetime
+
 from commands import (
     Bookmarks,
     AddBookmarkCommand,
@@ -10,15 +12,32 @@ from commands import (
 
 
 class Option:
-    def __init__(self, name: str, command, prep_call=None):
+    def __init__(
+        self,
+        name: str,
+        command,
+        prep_call=None,
+        success_message='{result}'
+    ):
         self.name = name
         self.command = command
         self.prep_call = prep_call
+        self.success_message = success_message
 
     def choose(self):
         data = self.prep_call() if self.prep_call else None
-        message = self.command.execute(data)
-        print(message)
+        success, result = self.command.execute(data)
+
+        formatted_result = ''
+
+        if isinstance(result, list):
+            for bookmark in result:
+                formatted_result += '\n' + format_bookmark(bookmark)
+        else:
+            formatted_result = result
+
+        if success:
+            print(self.success_message.format(result=formatted_result))
 
     def __str__(self):
         return self.name
@@ -70,6 +89,7 @@ def get_bookmark_for_edit():
     current_data = get_new_bookmark_data()
     data = {'id': int(current_id)}
     data.update(current_data)
+    data['date_added'] = datetime.datetime.utcnow().isoformat()
     return data
 
 
@@ -83,11 +103,26 @@ def get_github_import_options():
     }
 
 
+def format_bookmark(bookmark):
+    bookmark = [
+        bookmark.id,
+        bookmark.title,
+        bookmark.url,
+        bookmark.notes,
+        bookmark.date_added
+ ]
+    return '\t'.join(
+        str(field) if field else ''
+        for field in bookmark
+    )
+
+
 options = {
     'A': Option(
         'Добавить закладку',
         AddBookmarkCommand(),
-        prep_call=get_new_bookmark_data
+        prep_call=get_new_bookmark_data,
+        success_message='Закладка добавлена!'
     ),
     'B': Option(
         'Показать список закладок по дате',
@@ -100,12 +135,14 @@ options = {
     'D': Option(
         'Удалить закладку',
         DeleteBookmarkCommand(),
-        prep_call=get_bookmark_id_for_deletion
+        prep_call=get_bookmark_id_for_deletion,
+        success_message='Закладка удалена!'
     ),
     'G': Option(
         'Импортировать звезды GitHub',
         ImportGithubStarsCommand(),
-        prep_call=get_github_import_options
+        prep_call=get_github_import_options,
+        success_message='Импортировано {result} закладок'
     ),
     'E': Option(
         'Изменить закладку',
